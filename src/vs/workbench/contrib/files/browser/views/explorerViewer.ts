@@ -527,6 +527,51 @@ export class FilesFilter implements ITreeFilter<ExplorerItem, FuzzyScore> {
 	}
 }
 
+//
+// existing sort methods made modular (each method corrisponds to an enum value in explorerService.sortOrder)
+//
+const sortMethods: any = {
+	filesFirst(statA: ExplorerItem, statB: ExplorerItem): number {
+		if (statA.isDirectory && !statB.isDirectory) {
+			return 1;
+		}
+
+		if (statB.isDirectory && !statA.isDirectory) {
+			return -1;
+		}
+		return 0;
+	},
+	foldersFirst(statA: ExplorerItem, statB: ExplorerItem): number {
+		return -sortMethods.filesFirst(statA, statB);
+	},
+	type(statA: ExplorerItem, statB: ExplorerItem): number {
+		return compareFileNames(statA.name, statB.name);
+	},
+	modified(statA: ExplorerItem, statB: ExplorerItem): number {
+		if (statA.mtime !== statB.mtime) {
+			return (statA.mtime && statB.mtime && statA.mtime < statB.mtime) ? 1 : -1;
+		}
+		return 0
+	},
+	alphabetical(statA: ExplorerItem, statB: ExplorerItem): number {
+		if(statA.name < statB.name) {
+			return -1;
+		}
+		if(statA.name > statB.name) {
+			return 1;
+		}
+		return 0;
+	},
+	// default is alphabetical
+	default(statA: ExplorerItem, statB: ExplorerItem): number {
+		sortMethods.alphabetical(statA, statB)
+	},
+	// mixed is for completeness/legacy sake (it intentionally does not change sort order)
+	mixed(statA: ExplorerItem, statB: ExplorerItem): number {
+		return 0
+	},
+}
+
 // // Explorer Sorter
 export class FileSorter implements ITreeSorter<ExplorerItem> {
 
@@ -535,22 +580,10 @@ export class FileSorter implements ITreeSorter<ExplorerItem> {
 		@IWorkspaceContextService private readonly contextService: IWorkspaceContextService
 	) { }
 
-	public compare(statA: ExplorerItem, statB: ExplorerItem): number {
-		// Do not sort roots
-		if (statA.isRoot) {
-			if (statB.isRoot) {
-				const workspaceA = this.contextService.getWorkspaceFolder(statA.resource);
-				const workspaceB = this.contextService.getWorkspaceFolder(statB.resource);
-				return workspaceA && workspaceB ? (workspaceA.index - workspaceB.index) : -1;
-			}
-
-			return -1;
-		}
-
-		if (statB.isRoot) {
-			return 1;
-		}
-
+	//
+	// unmodified (moved) code
+	//
+	public singleSortMethodCompare(statA: ExplorerItem, statB: ExplorerItem): number {
 		const sortOrder = this.explorerService.sortOrder;
 
 		// Sort Directories
@@ -610,6 +643,58 @@ export class FileSorter implements ITreeSorter<ExplorerItem> {
 
 			default: /* 'default', 'mixed', 'filesFirst' */
 				return compareFileNames(statA.name, statB.name);
+		}
+	}
+
+	//
+	// new behavior
+	//
+	private multiSortMethodCompare(statA: ExplorerItem, statB: ExplorerItem): number {
+		const userSortMethods = this.explorerService.sortOrder;
+		if (userSortMethods.length == 0) {
+			return sortMethods.default(statA, statB);
+		}
+		for (const eachSortOrder of userSortMethods) {
+			let comparisonResult = sortMethods[eachSortOrder](statA, statB);
+			// if the result is sorted, then first method takes precedence
+			// however, if still no preference (aka 0) then go down the heirarchy
+			if (comparisonResult !== 0) {
+				return comparisonResult;
+			}
+		}
+		return 0;
+	}
+
+	//
+	// unmodified function name/types
+	//
+	public compare(statA: ExplorerItem, statB: ExplorerItem): number {
+		//
+		// unmodified code
+		//
+
+		// Do not sort roots
+		if (statA.isRoot) {
+			if (statB.isRoot) {
+				const workspaceA = this.contextService.getWorkspaceFolder(statA.resource);
+				const workspaceB = this.contextService.getWorkspaceFolder(statB.resource);
+				return workspaceA && workspaceB ? (workspaceA.index - workspaceB.index) : -1;
+			}
+
+			return -1;
+		}
+
+		if (statB.isRoot) {
+			return 1;
+		}
+
+		//
+		// new decision point
+		//
+		if (this.explorerService.sortOrder instanceof Array) {
+			return this.multiSortMethodCompare(statA, statB);
+		} else {
+			return this.singleSortMethodCompare(statA, statB);
 		}
 	}
 }

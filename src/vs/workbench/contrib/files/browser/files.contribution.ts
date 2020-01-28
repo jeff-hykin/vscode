@@ -380,17 +380,29 @@ configurationRegistry.registerConfiguration({
 			'default': true
 		},
 		'explorer.sortOrder': {
-			'type': 'string',
-			'enum': [SortOrder.Default, SortOrder.Mixed, SortOrder.FilesFirst, SortOrder.Type, SortOrder.Modified],
+			'type': ['enum', 'array'],
+			'description': nls.localize('sortOrder', "Controls sorting order of files and folders in the explorer."),
+			'items': {
+				'type': 'string',
+				'enum': [SortOrder.Default, SortOrder.Mixed, SortOrder.FilesFirst, SortOrder.Type, SortOrder.Modified],
+				'default': SortOrder.Default,
+				'enumDescriptions': [
+					nls.localize('sortOrder.default', 'Files and folders are sorted by their names, in alphabetical order. Folders are displayed before files.'),
+					nls.localize('sortOrder.mixed', 'Files and folders are sorted by their names, in alphabetical order. Files are interwoven with folders.'),
+					nls.localize('sortOrder.filesFirst', 'Files and folders are sorted by their names, in alphabetical order. Files are displayed before folders.'),
+					nls.localize('sortOrder.type', 'Files and folders are sorted by their extensions, in alphabetical order. Folders are displayed before files.'),
+					nls.localize('sortOrder.modified', 'Files and folders are sorted by last modified date, in descending order. Folders are displayed before files.')
+				],
+			},
+			'enum': [SortOrder.FilesFirst, SortOrder.FoldersFirst, SortOrder.Type, SortOrder.Modified, SortOrder.Alphabetical],
 			'default': SortOrder.Default,
 			'enumDescriptions': [
-				nls.localize('sortOrder.default', 'Files and folders are sorted by their names, in alphabetical order. Folders are displayed before files.'),
-				nls.localize('sortOrder.mixed', 'Files and folders are sorted by their names, in alphabetical order. Files are interwoven with folders.'),
-				nls.localize('sortOrder.filesFirst', 'Files and folders are sorted by their names, in alphabetical order. Files are displayed before folders.'),
-				nls.localize('sortOrder.type', 'Files and folders are sorted by their extensions, in alphabetical order. Folders are displayed before files.'),
-				nls.localize('sortOrder.modified', 'Files and folders are sorted by last modified date, in descending order. Folders are displayed before files.')
+				nls.localize('sortOrder.filesFirst', 'Files are placed above folders.'),
+				nls.localize('sortOrder.foldersFirst', 'Folders are placed above files.'),
+				nls.localize('sortOrder.type', 'Files and folders are sorted by their extensions, in alphabetical order.'),
+				nls.localize('sortOrder.modified', 'Files and folders are sorted by last modified date, in descending order.'),
+				nls.localize('sortOrder.alphabetical', 'Files and folders are sorted in alphabetical order')
 			],
-			'description': nls.localize('sortOrder', "Controls sorting order of files and folders in the explorer.")
 		},
 		'explorer.decorations.colors': {
 			type: 'boolean',

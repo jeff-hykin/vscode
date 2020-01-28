@@ -32,7 +32,7 @@ export const VIEWLET_ID = 'workbench.view.explorer';
 export interface IExplorerService {
 	_serviceBrand: undefined;
 	readonly roots: ExplorerItem[];
-	readonly sortOrder: SortOrder;
+	readonly sortOrder: SortOrder | SortOrder[];
 	readonly onDidChangeRoots: Event<void>;
 	readonly onDidChangeItem: Event<{ item?: ExplorerItem, recursive: boolean }>;
 	readonly onDidChangeEditable: Event<ExplorerItem>;
@@ -130,8 +130,10 @@ export const enum SortOrder {
 	Default = 'default',
 	Mixed = 'mixed',
 	FilesFirst = 'filesFirst',
+	FoldersFirst = 'foldersFirst',
 	Type = 'type',
-	Modified = 'modified'
+	Modified = 'modified',
+	Alphabetical = 'alphabetical'
 }
 
 export class TextFileContentProvider extends Disposable implements ITextModelContentProvider {
